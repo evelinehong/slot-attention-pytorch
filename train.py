@@ -11,7 +11,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument
 parser.add_argument('--model_dir', default='./tmp/model.ckpt', type=str, help='where to save models' )
 parser.add_argument('--seed', default=0, type=int, help='random seed')
 parser.add_argument('--batch_size', default=48, type=int)
