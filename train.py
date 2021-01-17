@@ -39,6 +39,8 @@ params = [{'params': model.parameters()}]
 train_dataloader = torch.utils.data.DataLoader(train_set, batch_size=opt.batch_size,
                         shuffle=True, num_workers=opt.num_workers)
 
+optimizer = optim.Adam(params, lr=learning_rate)
+
 start = time.time()
 for epoch in range(opt.num_epochs):
     model.train()
@@ -49,8 +51,6 @@ for epoch in range(opt.num_epochs):
 
     learning_rate = learning_rate * (opt.decay_rate ** (
         epoch / opt.decay_epochs))
-    
-    optimizer = optim.Adam(params, lr=learning_rate)
 
     total_loss = 0
 
