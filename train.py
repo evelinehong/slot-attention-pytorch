@@ -29,7 +29,7 @@ resolution = (128, 128)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-train_set = PARTNET('train')
+train_set = CLEVR('train')
 model = SlotAttentionAutoEncoder(resolution, opt.num_slots, opt.num_iterations, opt.hid_dim).to(device)
 
 criterion = nn.MSELoss()
