@@ -6,31 +6,34 @@ from tqdm import tqdm
 import time
 import datetime
 import torch.optim as optim
+import torch
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model_dir', default='./tmp/model.ckpt', type=str, help='where to save models' )
+parser.add_argument
+parser.add_argument('--model_dir', default='./tmp/model5.ckpt', type=str, help='where to save models' )
 parser.add_argument('--seed', default=0, type=int, help='random seed')
-parser.add_argument('--batch_size', default=48, type=int)
-parser.add_argument('--num_slots', default=11, type=int, help='Number of slots in Slot Attention.')
+parser.add_argument('--batch_size', default=16, type=int)
+parser.add_argument('--num_slots', default=7, type=int, help='Number of slots in Slot Attention.')
 parser.add_argument('--num_iterations', default=3, type=int, help='Number of attention iterations.')
-parser.add_argument('--hid_dim', default=32, type=int, help='hidden dimension size')
+parser.add_argument('--hid_dim', default=64, type=int, help='hidden dimension size')
 parser.add_argument('--learning_rate', default=0.0004, type=float)
-parser.add_argument('--warmup_epochs', default=50, type=int, help='Number of warmup steps for the learning rate.')
+parser.add_argument('--warmup_steps', default=10000, type=int, help='Number of warmup steps for the learning rate.')
 parser.add_argument('--decay_rate', default=0.5, type=float, help='Rate for the learning rate decay.')
-parser.add_argument('--decay_epochs', default=500, type=int, help='Number of steps for the learning rate decay.')
+parser.add_argument('--decay_steps', default=100000, type=int, help='Number of steps for the learning rate decay.')
 parser.add_argument('--num_workers', default=4, type=int, help='number of workers for loading data')
-parser.add_argument('--num_epochs', default=600, type=int, help='number of workers for loading data')
+parser.add_argument('--num_epochs', default=1000, type=int, help='number of workers for loading data')
 
 opt = parser.parse_args()
 resolution = (128, 128)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-train_set = CLEVR('train')
+train_set = PARTNET('train')
 model = SlotAttentionAutoEncoder(resolution, opt.num_slots, opt.num_iterations, opt.hid_dim).to(device)
+# model.load_state_dict(torch.load('./tmp/model4.ckpt')['model_state_dict'])
 
 criterion = nn.MSELoss()
 
@@ -40,21 +43,24 @@ train_dataloader = torch.utils.data.DataLoader(train_set, batch_size=opt.batch_s
                         shuffle=True, num_workers=opt.num_workers)
 
 start = time.time()
+i = 0
 for epoch in range(opt.num_epochs):
     model.train()
-    # if epoch < opt.warmup_epochs:
-    #     learning_rate = opt.learning_rate * (epoch / opt.warmup_epochs)
-    # else:
-    learning_rate = opt.learning_rate
-
-    learning_rate = learning_rate * (opt.decay_rate ** (
-        epoch / opt.decay_epochs))
-    
-    optimizer = optim.Adam(params, lr=learning_rate)
 
     total_loss = 0
 
     for sample in tqdm(train_dataloader):
+        i += 1
+
+        if i < opt.warmup_steps:
+            learning_rate = opt.learning_rate * (i / opt.warmup_steps)
+        else:
+            learning_rate = opt.learning_rate
+
+        learning_rate = learning_rate * (opt.decay_rate ** (
+            i / opt.decay_steps))
+        
+        optimizer = optim.Adam(params, lr=learning_rate)
         image = sample['image'].to(device)
         recon_combined, recons, masks, slots = model(image)
         loss = criterion(recon_combined, image)
@@ -71,7 +77,7 @@ for epoch in range(opt.num_epochs):
     print ("Epoch: {}, Loss: {}, Time: {}".format(epoch, total_loss,
         datetime.timedelta(seconds=time.time() - start)))
 
-    # if not epoch % 10:
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        }, opt.model_dir)
+    if not epoch % 10:
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            }, opt.model_dir)
