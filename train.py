@@ -51,7 +51,8 @@ for epoch in range(opt.num_epochs):
 
     learning_rate = learning_rate * (opt.decay_rate ** (
         epoch / opt.decay_epochs))
-
+    
+    optimizer.param_groups[0]['lr'] = learning_rate
     total_loss = 0
 
     for sample in tqdm(train_dataloader):
