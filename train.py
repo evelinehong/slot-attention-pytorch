@@ -39,7 +39,7 @@ params = [{'params': model.parameters()}]
 train_dataloader = torch.utils.data.DataLoader(train_set, batch_size=opt.batch_size,
                         shuffle=True, num_workers=opt.num_workers)
 
-optimizer = optim.Adam(params, lr=learning_rate)
+optimizer = optim.Adam(params, lr=opt.learning_rate)
 
 start = time.time()
 for epoch in range(opt.num_epochs):
