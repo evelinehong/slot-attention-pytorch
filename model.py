@@ -115,11 +115,11 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, hid_dim, resolution):
         super().__init__()
-        self.conv1 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=3)
-        self.conv2 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=2)
-        self.conv3 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=2)
-        self.conv4 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=3)
-        self.conv5 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(1, 1), padding=1)
+        self.conv1 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=2, output_padding=1).to(device)
+        self.conv2 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=2, output_padding=1).to(device)
+        self.conv3 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=2, output_padding=1).to(device)
+        self.conv4 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(2, 2), padding=2, output_padding=1).to(device)
+        self.conv5 = nn.ConvTranspose2d(hid_dim, hid_dim, 5, stride=(1, 1), padding=2).to(device)
         self.conv6 = nn.ConvTranspose2d(hid_dim, 4, 3, stride=(1, 1), padding=1)
         self.decoder_initial_size = (8, 8)
         self.decoder_pos = SoftPositionEmbed(hid_dim, self.decoder_initial_size)
@@ -132,7 +132,7 @@ class Decoder(nn.Module):
         x = F.relu(x)
         x = self.conv2(x)
         x = F.relu(x)
-        x = F.pad(x, (4,4,4,4))
+#         x = F.pad(x, (4,4,4,4)) # no longer needed
         x = self.conv3(x)
         x = F.relu(x)
         x = self.conv4(x)
