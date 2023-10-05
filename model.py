@@ -14,7 +14,7 @@ class SlotAttention(nn.Module):
         self.scale = dim ** -0.5
 
         self.slots_mu = nn.Parameter(torch.randn(1, 1, dim))
-        self.slots_sigma = nn.Parameter(torch.rand(1, 1, dim))
+        self.slots_log_sigma = nn.Parameter(torch.rand(1, 1, dim))  # Using log(sigma) instead of sigma for numerical stability
 
         self.to_q = nn.Linear(dim, dim)
         self.to_k = nn.Linear(dim, dim)
@@ -36,8 +36,10 @@ class SlotAttention(nn.Module):
         n_s = num_slots if num_slots is not None else self.num_slots
         
         mu = self.slots_mu.expand(b, n_s, -1)
-        sigma = self.slots_sigma.expand(b, n_s, -1)
-        slots = torch.normal(mu, sigma)
+        sigma = torch.exp(self.slots_log_sigma.expand(b, n_s, -1))  # Exponentiate log(sigma) to get sigma
+        epsilon = torch.randn_like(sigma)  # Sample ε from a standard Gaussian
+        
+        slots = mu + sigma * epsilon  # Reparameterization trick
 
         inputs = self.norm_input(inputs)        
         k, v = self.to_k(inputs), self.to_v(inputs)
